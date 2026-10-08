@@ -1,26 +1,110 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --navy: #1b2a4a;
+  --navy-soft: #2c3e66;
+  --gold: #b08d3c;
+  --gold-soft: #f6efdf;
+  --ink: #1f2430;
+  --muted: #667085;
+  --line: #e4e7ec;
+  --bg: #ffffff;
+  --bg-soft: #f7f8fa;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-navy: var(--navy);
+  --color-navy-soft: var(--navy-soft);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-soft: var(--bg-soft);
+  --font-sans: var(--font-noto), "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.7;
+}
+
+/* iOS で入力時にズームされないよう 16px 以上を確保 */
+input,
+textarea,
+select {
+  font-size: 1rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 3rem;
+  padding: 0 1.25rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.btn:disabled {
+  opacity: 0.5;
+}
+.btn-primary {
+  background: var(--navy);
+  color: #fff;
+}
+.btn-gold {
+  background: var(--gold);
+  color: #fff;
+}
+.btn-outline {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--navy);
+}
+.btn-danger {
+  border: 1px solid #f3c4c4;
+  background: #fff;
+  color: #b42318;
+}
+.btn-sm {
+  min-height: 2.25rem;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+}
+
+.field {
+  width: 100%;
+  border: 1px solid #cfd4dc;
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  background: #fff;
+  color: var(--ink);
+}
+.field:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 0;
+  border-color: var(--gold);
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: #fff;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.375rem;
 }

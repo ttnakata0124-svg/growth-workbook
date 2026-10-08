@@ -1,0 +1,32 @@
+import { getCurrentProfile } from "@/lib/auth";
+import { logout } from "@/app/login/actions";
+import { PasswordForm } from "./password-form";
+
+export const metadata = { title: "アカウント" };
+
+export default async function AccountPage() {
+  const profile = await getCurrentProfile();
+  return (
+    <main className="space-y-6">
+      <h1 className="text-xl font-bold text-navy">アカウント</h1>
+      <section className="card space-y-1 p-4 text-sm">
+        <p><span className="text-muted">氏名：</span>{profile.full_name || "—"}</p>
+        <p><span className="text-muted">メール：</span>{profile.email}</p>
+        <p><span className="text-muted">権限：</span>{profile.role === "admin" ? "管理者" : "社員"}</p>
+      </section>
+      <section className="card p-4">
+        <h2 className="mb-3 font-bold text-navy">パスワード変更</h2>
+        <PasswordForm />
+      </section>
+      <section className="card p-4">
+        <h2 className="font-bold text-navy">ホーム画面に追加</h2>
+        <p className="mt-1 text-sm text-muted">
+          iPhone：Safari の共有ボタン →「ホーム画面に追加」。Android：Chrome のメニュー →「ホーム画面に追加」または「アプリをインストール」。
+        </p>
+      </section>
+      <form action={logout}>
+        <button className="btn btn-outline w-full">ログアウト</button>
+      </form>
+    </main>
+  );
+}
