@@ -1,11 +1,15 @@
 import { getCurrentProfile } from "@/lib/auth";
 import { logout } from "@/app/login/actions";
+import { hasPin } from "@/lib/pin";
+import { removeLoginPin } from "./actions";
 import { PasswordForm } from "./password-form";
+import { PinSetupForm } from "./pin-setup-form";
 
 export const metadata = { title: "アカウント" };
 
 export default async function AccountPage() {
   const profile = await getCurrentProfile();
+  const pinSet = await hasPin(profile.id);
   return (
     <main className="space-y-6">
       <h1 className="text-xl font-bold text-navy">アカウント</h1>
@@ -13,6 +17,19 @@ export default async function AccountPage() {
         <p><span className="text-muted">氏名：</span>{profile.full_name || "—"}</p>
         <p><span className="text-muted">メール：</span>{profile.email}</p>
         <p><span className="text-muted">権限：</span>{profile.role === "admin" ? "管理者" : "社員"}</p>
+      </section>
+      <section className="card p-4">
+        <h2 className="font-bold text-navy">6桁のログインコード</h2>
+        <p className="mb-3 mt-1 text-sm text-muted">
+          設定すると、この端末では次回から6桁のコードだけでログインできます。別の端末では、最初の1回だけメールアドレスとパスワードでログインしてください。
+          {pinSet && "（設定済み）"}
+        </p>
+        <PinSetupForm pinSet={pinSet} />
+        {pinSet && (
+          <form action={removeLoginPin} className="mt-3">
+            <button className="btn btn-outline w-full">ログインコードを解除</button>
+          </form>
+        )}
       </section>
       <section className="card p-4">
         <h2 className="mb-3 font-bold text-navy">パスワード変更</h2>
