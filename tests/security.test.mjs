@@ -174,3 +174,18 @@ test("公開サインアップはできない（管理者による登録のみ�
   const { error } = await anon.auth.signUp({ email: `outsider-${Date.now()}@example.com`, password: "outsider-pass-123" });
   assert.ok(error, "サインアップは無効化されている");
 });
+
+test("ログインコード（PIN）と端末の表は社員・管理者・未ログインから読み書きできない", async () => {
+  const { error: setupErr } = await service.from("login_pins").upsert({ user_id: staff.uid, pin_hash: "x:y" });
+  assert.ifError(setupErr);
+  const anon = createClient(URL, ANON, opts);
+  for (const c of [anon, staff.c, admin.c]) {
+    for (const table of ["login_pins", "login_devices"]) {
+      const { data } = await c.from(table).select("*");
+      assert.equal((data ?? []).length, 0, `${table} は見えない`);
+    }
+    const { error } = await c.from("login_pins").upsert({ user_id: staff2.uid, pin_hash: "a:b" });
+    assert.ok(error, "書き込めない");
+  }
+  await service.from("login_pins").delete().eq("user_id", staff.uid);
+});
