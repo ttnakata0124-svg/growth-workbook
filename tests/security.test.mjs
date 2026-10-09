@@ -189,3 +189,18 @@ test("ログインコード（PIN）と端末の表は社員・管理者・未�
   }
   await service.from("login_pins").delete().eq("user_id", staff.uid);
 });
+
+test("社員のログインコードと失敗記録の表は社員・管理者・未ログインから読み書きできない", async () => {
+  const { error: setupErr } = await service.from("login_codes").upsert({ user_id: staff.uid, code_hash: "test-hash" });
+  assert.ifError(setupErr);
+  const anon = createClient(URL, ANON, opts);
+  for (const c of [anon, staff.c, admin.c]) {
+    for (const table of ["login_codes", "login_code_attempts"]) {
+      const { data } = await c.from(table).select("*");
+      assert.equal((data ?? []).length, 0, `${table} は見えない`);
+    }
+    const { error } = await c.from("login_codes").upsert({ user_id: staff2.uid, code_hash: "x" });
+    assert.ok(error, "書き込めない");
+  }
+  await service.from("login_codes").delete().eq("user_id", staff.uid);
+});

@@ -9,7 +9,7 @@ const ch = (n: number) => `00000000-0000-4000-8001-${String(n).padStart(12, "0")
 
 async function login(page: Page, user: { email: string; password: string }) {
   await page.context().clearCookies();
-  await page.goto("/login");
+  await page.goto("/login?mode=password");
   await page.getByLabel("メールアドレス").fill(user.email);
   await page.getByLabel("パスワード").fill(user.password);
   await page.getByRole("button", { name: "ログイン" }).click();
@@ -203,8 +203,8 @@ test("管理者が社員アカウントを発行し、その社員がログイ�
   const email = `new-${Date.now()}@example.com`;
   const form = page.locator("section", { hasText: "社員アカウントを追加" });
   await form.getByLabel("氏名", { exact: true }).fill("新人 三郎");
-  await form.getByLabel("メールアドレス").fill(email);
-  await form.getByLabel("初期パスワード（8文字以上）").fill("new-user-pass-1");
+  await form.getByLabel(/^メールアドレス/).fill(email);
+  await form.getByLabel(/初期パスワード/).fill("new-user-pass-1");
   await form.getByRole("button", { name: "アカウントを作成" }).click();
   await expect(page.getByText("新人 三郎 さんのアカウントを作成しました")).toBeVisible();
   await login(page, { email, password: "new-user-pass-1" });

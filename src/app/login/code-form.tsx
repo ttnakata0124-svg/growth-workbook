@@ -2,18 +2,17 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { pinLogin, type LoginState } from "./actions";
+import { codeLogin, type LoginState } from "./actions";
 
-export function PinForm({ fullName }: { fullName: string }) {
-  const [state, action, pending] = useActionState<LoginState, FormData>(pinLogin, {});
+export function CodeForm() {
+  const [state, action, pending] = useActionState<LoginState, FormData>(codeLogin, {});
   return (
     <form action={action} className="space-y-5">
-      <p className="text-center font-bold text-navy">{fullName ? `${fullName} さん` : "おかえりなさい"}</p>
       <div>
-        <label htmlFor="pin" className="label">6桁のログインコード</label>
+        <label htmlFor="code" className="label">6桁のログインコード</label>
         <input
-          id="pin"
-          name="pin"
+          id="code"
+          name="code"
           type="password"
           inputMode="numeric"
           pattern="\d{6}"
@@ -31,10 +30,7 @@ export function PinForm({ fullName }: { fullName: string }) {
         {pending ? "ログイン中…" : "ログイン"}
       </button>
       <p className="text-center text-sm">
-        <Link href="/login?mode=password" className="text-navy underline">メールアドレスとパスワードでログイン</Link>
-      </p>
-      <p className="text-center text-sm">
-        <Link href="/login?mode=code" className="text-navy underline">別の人がログインする</Link>
+        <Link href="/login?mode=password" className="text-navy underline">メールアドレスでログイン（管理者）</Link>
       </p>
     </form>
   );
