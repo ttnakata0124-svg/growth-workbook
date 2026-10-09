@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { login, type LoginState } from "./actions";
 
@@ -21,6 +22,9 @@ export function LoginForm({ initialError }: { initialError?: string }) {
       <button type="submit" disabled={pending} className="btn btn-primary w-full">
         {pending ? "ログイン中…" : "ログイン"}
       </button>
+      <p className="text-center text-sm">
+        <Link href="/login?mode=code" className="text-navy underline">ログインコードでログイン</Link>
+      </p>
     </form>
   );
 }

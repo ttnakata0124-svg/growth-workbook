@@ -1,12 +1,12 @@
-// 6桁のログインコード（PIN）でのログイン。前提は workbook.spec.ts と同じ。
+// 管理者の端末ごとの6桁のログインコード（PIN）でのログイン。前提は workbook.spec.ts と同じ。
 import { expect, test } from "@playwright/test";
 
-const USER = { email: "staff2@example.com", password: "staff-pass-123" };
+const USER = { email: "admin@example.com", password: "admin-pass-123" };
 
 test.describe.configure({ mode: "serial" });
 
 test("コードを設定した端末では6桁のコードだけでログインできる", async ({ page }) => {
-  await page.goto("/login");
+  await page.goto("/login?mode=password");
   await page.getByLabel("メールアドレス").fill(USER.email);
   await page.getByLabel("パスワード").fill(USER.password);
   await page.getByRole("button", { name: "ログイン" }).click();
@@ -20,7 +20,7 @@ test("コードを設定した端末では6桁のコードだけでログイン�
 
   await page.getByRole("button", { name: "ログアウト" }).click();
   await page.waitForURL((u) => u.pathname === "/login");
-  await expect(page.getByText("営業 次郎 さん")).toBeVisible();
+  await expect(page.getByText("管理 太郎 さん")).toBeVisible();
 
   // 間違ったコード
   await page.getByLabel("6桁のログインコード").fill("000000");
@@ -30,11 +30,11 @@ test("コードを設定した端末では6桁のコードだけでログイン�
   await page.getByLabel("6桁のログインコード").fill("123456");
   await page.getByRole("button", { name: "ログイン" }).click();
   await page.waitForURL((u) => u.pathname === "/");
-  await expect(page.getByText("営業 次郎 さん").first()).toBeVisible();
+  await expect(page.getByText("管理 太郎 さん").first()).toBeVisible();
 });
 
 test("コードを5回まちがえるとコードでは入れず、パスワードでログインすると戻る", async ({ page }) => {
-  await page.goto("/login");
+  await page.goto("/login?mode=password");
   await page.getByLabel("メールアドレス").fill(USER.email);
   await page.getByLabel("パスワード").fill(USER.password);
   await page.getByRole("button", { name: "ログイン" }).click();
@@ -48,9 +48,11 @@ test("コードを5回まちがえるとコードでは入れず、パスワー�
     await page.getByRole("button", { name: "ログイン" }).click();
     await expect(page.locator("p[role=alert]")).toContainText(i < 4 ? `あと${4 - i}回` : "コードでのログインを止めています");
   }
+  // 止まった後は社員用のコード画面になる
   await page.goto("/login");
-  await expect(page.getByLabel("メールアドレス")).toBeVisible();
+  await expect(page.getByText("メールアドレスでログイン（管理者）")).toBeVisible();
 
+  await page.goto("/login?mode=password");
   await page.getByLabel("メールアドレス").fill(USER.email);
   await page.getByLabel("パスワード").fill(USER.password);
   await page.getByRole("button", { name: "ログイン" }).click();
@@ -69,5 +71,5 @@ test("コードを5回まちがえるとコードでは入れず、パスワー�
   await expect(page.getByRole("button", { name: "コードを設定" })).toBeVisible();
   await page.getByRole("button", { name: "ログアウト" }).click();
   await page.waitForURL((u) => u.pathname === "/login");
-  await expect(page.getByLabel("メールアドレス")).toBeVisible();
+  await expect(page.getByText("メールアドレスでログイン（管理者）")).toBeVisible();
 });

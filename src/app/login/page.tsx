@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { APP_NAME, APP_NAME_JA } from "@/lib/config";
 import { findDeviceLogin, PIN_MAX_FAILURES } from "@/lib/pin";
+import { CodeForm } from "./code-form";
 import { LoginForm } from "./login-form";
 import { PinForm } from "./pin-form";
 
@@ -8,8 +9,9 @@ export const metadata: Metadata = { title: "ログイン" };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; mode?: string }> }) {
   const { error, mode } = await searchParams;
-  // ログインコードを設定済みの端末では、6桁のコードだけでログインできる。
-  const device = mode === "password" ? null : await findDeviceLogin();
+  // ログインコードを設定済みの端末（管理者）では、その人の6桁のコードでログインできる。
+  // それ以外は、社員用の6桁のログインコードの画面を出す。
+  const device = mode === "password" || mode === "code" ? null : await findDeviceLogin();
   const usePin = Boolean(device?.pinHash) && device!.failedCount < PIN_MAX_FAILURES;
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6 py-12">
@@ -20,11 +22,13 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       </div>
       {usePin ? (
         <PinForm fullName={device!.fullName} />
+      ) : mode !== "password" && error !== "inactive" ? (
+        <CodeForm />
       ) : (
         <LoginForm initialError={error === "inactive" ? "このアカウントは利用停止中です。管理者にお問い合わせください。" : undefined} />
       )}
       <p className="mt-8 text-center text-xs text-muted">
-        アカウントは管理者が発行します。ログインできない場合は管理者にお問い合わせください。
+        ログインコードとアカウントは管理者が発行します。ログインできない場合は管理者にお問い合わせください。
       </p>
     </main>
   );

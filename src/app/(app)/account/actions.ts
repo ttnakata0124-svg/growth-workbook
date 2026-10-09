@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentProfile } from "@/lib/auth";
+import { getCurrentProfile, requireAdmin } from "@/lib/auth";
+import { issueLoginCode } from "@/lib/login-code";
 import { hashPin, forgetDevice, isValidPin, registerDevice } from "@/lib/pin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -22,7 +23,8 @@ export async function changePassword(_prev: PasswordState, formData: FormData): 
 export type PinState = { error?: string; ok?: string };
 
 export async function setLoginPin(_prev: PinState, formData: FormData): Promise<PinState> {
-  const profile = await getCurrentProfile();
+  // 端末ごとのコードは管理者用（社員は管理者が発行するログインコードを使う）
+  const profile = await requireAdmin();
   const pin = String(formData.get("pin") ?? "");
   const confirm = String(formData.get("pin_confirm") ?? "");
   if (!isValidPin(pin)) return { error: "ログインコードは6桁の数字にしてください。" };
@@ -43,4 +45,14 @@ export async function removeLoginPin() {
   await admin.from("login_devices").delete().eq("user_id", profile.id);
   await admin.from("login_pins").delete().eq("user_id", profile.id);
   revalidatePath("/account");
+}
+
+export type MyCodeState = { error?: string; code?: string };
+
+export async function reissueMyCode(): Promise<MyCodeState> {
+  const profile = await getCurrentProfile();
+  if (profile.role !== "employee") return { error: "管理者はログインコードを使えません。" };
+  const code = await issueLoginCode(profile.id);
+  if (!code) return { error: "ログインコードを発行できませんでした。" };
+  return { code };
 }

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { findUserByCode } from "@/lib/login-code";
 import { findDeviceLogin, forgetDevice, hasPin, isValidPin, PIN_MAX_FAILURES, registerDevice, verifyPin } from "@/lib/pin";
 
 export type LoginState = { error?: string };
@@ -53,17 +54,42 @@ export async function pinLogin(_prev: LoginState, formData: FormData): Promise<L
     admin.from("login_devices").update({ last_used_at: new Date().toISOString() }).eq("id", device.deviceId),
   ]);
 
-  // メールは送らずにワンタイムトークンを発行し、その場で検証してセッションを作る。
-  const { data: user } = await admin.auth.admin.getUserById(device.userId);
-  const email = user.user?.email;
-  if (!email) return { error: "ログインできませんでした。メールアドレスとパスワードでログインしてください。" };
-  const { data: link, error: linkError } = await admin.auth.admin.generateLink({ type: "magiclink", email });
-  if (linkError || !link.properties?.hashed_token) {
-    return { error: "ログインできませんでした。メールアドレスとパスワードでログインしてください。" };
+  return signInAs(device.userId);
+}
+
+export async function codeLogin(_prev: LoginState, formData: FormData): Promise<LoginState> {
+  const code = String(formData.get("code") ?? "");
+  if (!isValidPin(code)) return { error: "6桁の数字を入力してください。" };
+  const found = await findUserByCode(code);
+  if (!found.ok) {
+    return {
+      error: found.reason === "locked"
+        ? "ログインの失敗が続いたため、しばらくコードでのログインを止めています。時間をおいてやり直してください。"
+        : "コードが正しくありません。",
+    };
   }
+  const { data: profile } = await createAdminClient()
+    .from("profiles")
+    .select("role, is_active")
+    .eq("id", found.userId)
+    .maybeSingle();
+  // コードだけで入れるのは利用中の一般社員のみ（管理者はメールアドレスとパスワード）
+  if (!profile?.is_active || profile.role !== "employee") return { error: "コードが正しくありません。" };
+  return signInAs(found.userId);
+}
+
+// メールは送らずにワンタイムトークンを発行し、その場で検証してセッションを作る。
+async function signInAs(userId: string): Promise<LoginState> {
+  const failed = { error: "ログインできませんでした。管理者にお問い合わせください。" };
+  const admin = createAdminClient();
+  const { data: user } = await admin.auth.admin.getUserById(userId);
+  const email = user.user?.email;
+  if (!email) return failed;
+  const { data: link, error: linkError } = await admin.auth.admin.generateLink({ type: "magiclink", email });
+  if (linkError || !link.properties?.hashed_token) return failed;
   const supabase = await createClient();
   const { error } = await supabase.auth.verifyOtp({ type: "email", token_hash: link.properties.hashed_token });
-  if (error) return { error: "ログインできませんでした。メールアドレスとパスワードでログインしてください。" };
+  if (error) return failed;
   redirect("/");
 }
 

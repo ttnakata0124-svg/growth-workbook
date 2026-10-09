@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/data";
 import type { Chapter, ChapterProgressRow, Course, Profile } from "@/lib/types";
 import { ProgressBar, StatusBadge } from "@/components/status-badge";
+import { isPlaceholderEmail } from "@/lib/login-code";
 
 export default async function AdminUserPage({ params }: { params: Promise<{ userId: string }> }) {
   const { userId } = await params;
@@ -23,7 +24,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ user
     <main>
       <Link href="/admin" className="text-sm text-muted">← 学習進捗</Link>
       <h1 className="mt-2 text-xl font-bold text-navy">{p.full_name || p.email}</h1>
-      <p className="text-sm text-muted">{p.email}</p>
+      <p className="text-sm text-muted">{isPlaceholderEmail(p.email) ? "コードでログイン" : p.email}</p>
       <p className="mt-2 rounded-lg bg-soft px-3 py-2 text-xs text-muted">回答内容はプライバシー保護のため表示されません。</p>
 
       {((courses ?? []) as Course[]).map((course) => {

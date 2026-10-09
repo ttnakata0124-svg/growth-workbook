@@ -5,6 +5,8 @@ import { formatDate } from "@/lib/data";
 import type { Profile } from "@/lib/types";
 import { updateUser } from "./actions";
 import { CreateUserForm } from "./create-user-form";
+import { ReissueCodeForm } from "./reissue-code-form";
+import { isPlaceholderEmail } from "@/lib/login-code";
 
 export const metadata = { title: "社員アカウント" };
 
@@ -31,7 +33,7 @@ export default async function AdminUsersPage() {
                   <Link href={`/admin/users/${u.id}`} className="font-bold text-navy underline-offset-2 hover:underline">
                     {u.full_name || "（氏名未設定）"}
                   </Link>
-                  <p className="text-xs text-muted">{u.email}・登録 {formatDate(u.created_at)}</p>
+                  <p className="text-xs text-muted">{isPlaceholderEmail(u.email) ? "コードでログイン" : u.email}・登録 {formatDate(u.created_at)}</p>
                 </div>
                 <div className="flex gap-1.5 text-xs">
                   <span className={`rounded-full px-2 py-0.5 font-bold ${u.role === "admin" ? "bg-navy text-white" : "bg-gray-100 text-gray-700"}`}>
@@ -50,12 +52,15 @@ export default async function AdminUsersPage() {
                     <input name="full_name" defaultValue={u.full_name} className="field py-2" aria-label="氏名" />
                     <button className="btn btn-outline btn-sm">氏名を保存</button>
                   </form>
+                  {u.role === "employee" && <ReissueCodeForm userId={u.id} />}
+                  {!isPlaceholderEmail(u.email) && (
                   <form action={updateUser} className="flex gap-2">
                     <input type="hidden" name="user_id" value={u.id} />
                     <input type="hidden" name="op" value="password" />
                     <input name="password" type="text" minLength={8} placeholder="新しいパスワード（8文字以上）" className="field py-2" aria-label="新しいパスワード" autoComplete="off" />
                     <button className="btn btn-outline btn-sm">再設定</button>
                   </form>
+                  )}
                   {u.id !== me.id && (
                     <div className="flex flex-wrap gap-2">
                       <form action={updateUser}>
